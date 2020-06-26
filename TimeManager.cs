@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
@@ -12,16 +13,16 @@ namespace Temporal
 {
     class TimeManager
     {
-        private readonly string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Temporal");
+        private readonly string folder =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Temporal");
+
         private readonly string activities_path;
-        private readonly string settings_path;
-        private Activities activites;
-        private Settings settings;
+        private Activities activities;
         private PastelConsole pc = new PastelConsole(ColourPalette.MarineFields);
+
         public TimeManager()
         {
             activities_path = Path.Combine(folder, "activities.json");
-            settings_path = Path.Combine(folder, "settings.json");
         }
 
         public void Run()
@@ -31,41 +32,35 @@ namespace Temporal
             do
             {
                 Console.Clear();
-                string ans = pc.AskListQuestion(new string[] {"Edit Activities", "Edit Settings", "Generate Day Plan", "Exit"});
+                string ans = pc.AskListQuestion(new string[]
+                    {"Edit Activities", "Generate Day Plan", "Exit"});
                 if (Int32.TryParse(ans, out response))
                 {
                     switch (response)
                     {
                         case 1:
                             PromptEditActivities();
-                            break;
+                            break; 
                         case 2:
-                            PromptEditSettings();
-                            break;
-                        case 3:
-                            PrintAPlan();
+                            PromptPrintAPlan();
                             Console.ReadLine();
                             break;
-
                     }
                 }
-            } while (response !=4);
+            } while (response != 4);
         }
 
-        private void PrintAPlan()
+        private void PromptPrintAPlan() //TODO
         {
-            throw new NotImplementedException();
-        }
+            //TODO GET SETTINGS
 
-        private void PromptEditSettings()
-        {
-            throw new NotImplementedException();
+            PrintAPlan(hours);
         }
 
         private void PromptEditActivities()
         {
             Console.Clear();
-            int response=0;
+            int response = 0;
             do
             {
                 try
@@ -78,30 +73,31 @@ namespace Temporal
                         switch (response)
                         {
                             case 1:
-                                int e_ID = pc.AskIntQuestion("Which activity would you like to edit?");//TODO
-                                if (e_ID < 0 || e_ID >= activites.Count())
+                                int e_ID = pc.AskIntQuestion("Which activity would you like to edit?");
+                                if (e_ID < 0 || e_ID >= activities.Count())
                                     throw new Exception("Cannot delete that item");
                                 else
                                 {
-                                    ActivitesEdit(e_ID);
-                                    Save_Activites();
+                                    ActivitiesEdit(e_ID);
+                                    Save_Activities();
                                 }
 
                                 break;
                             case 2:
-                                activites.AddNew();
-                                Save_Activites();
+                                activities.AddNew();
+                                Save_Activities();
                                 pc.WriteLine("New blank activity added.");
                                 break;
                             case 3:
                                 int d_ID = pc.AskIntQuestion("Which activity would you like to delete?");
-                                if (d_ID < 0 || d_ID >= activites.Count())
+                                if (d_ID < 0 || d_ID >= activities.Count())
                                     throw new Exception("Cannot delete that item");
                                 else
                                 {
-                                    activites.RemoveAt(d_ID);
-                                    Save_Activites();
-                                    pc.WriteLine($"{d_ID} removed");
+                                    string nameToDelete = activities[d_ID].Name;
+                                    activities.RemoveAt(d_ID);
+                                    Save_Activities();
+                                    pc.WriteLine($"{nameToDelete} removed");
                                 }
 
                                 break;
@@ -115,18 +111,21 @@ namespace Temporal
             } while (response != 4);
         }
 
-        private void ActivitesEdit(int eId)
+        private void ActivitiesEdit(int eId)
         {
             Console.Clear();
-            Todo cact = activites[eId];
+            Todo cact = activities[eId];
             int response = 0;
             do
             {
                 try
                 {
-                    pc.FormatWriteLine("{2} ({5})",cact.Name,cact.Details);
+                    pc.FormatWriteLine("{2} ({5})", cact.Name, cact.Details);
                     string ans = pc.AskListQuestion(new string[]
-                        {"Edit Name", "Edit Start Date", "Edit End Date","Edit Hours Required", "Back"});
+                    {
+                        "Edit Name", "Edit Start Date", "Edit End Date", "Edit Hours Required", "Edit Times per Week",
+                        "Back"
+                    });
                     if (Int32.TryParse(ans, out response))
                     {
                         switch (response)
@@ -139,13 +138,7 @@ namespace Temporal
                             case 2:
                                 pc.WriteLine("Insert the new date (Put '.' if today).");
                                 string newStartDate = pc.ReadAnswer();
-                                if(newStartDate==".")
-                                    cact.Start = DateTime.Today;
-                                else
-                                {
-                                    cact.Start = DateTime.Parse(newStartDate);
-                                }
-
+                                cact.Start = newStartDate == "." ? DateTime.Today : DateTime.Parse(newStartDate);
                                 break;
                             case 3:
                                 pc.WriteLine("Insert the new date.");
@@ -153,10 +146,16 @@ namespace Temporal
                                 cact.End = DateTime.Parse(newEndDate);
                                 break;
                             case 4:
-                                int duration = pc.AskIntQuestion("Insert the number of hours a week you would like to use do this for.");
-                                cact.Hours = TimeSpan.FromHours(duration);
+                                int duration =
+                                    pc.AskIntQuestion(
+                                        "Insert the number of hours a week you would like to use do this for.");
+                                cact.Hours = duration;
                                 break;
-
+                            case 5:
+                                int repeats =
+                                    pc.AskIntQuestion("Insert the number of times a week you want to do this.");
+                                cact.TimesPerWeek = repeats;
+                                break;
                         }
                     }
                 }
@@ -164,17 +163,17 @@ namespace Temporal
                 {
                     pc.WriteError(e);
                 }
-            } while (response != 5);
+            } while (response != 6);
         }
 
         private void PrintActivities()
         {
-            for (int i = 0; i < activites.Count(); i++)
+            for (int i = 0; i < activities.Count(); i++)
             {
-                pc.FormatWriteLine("{3}. {2} ({5})",i.ToString(),activites[i].Name,activites[i].Details);
+                pc.FormatWriteLine("{3}. {2} ({5})", i.ToString(), activities[i].Name, activities[i].Details);
             }
 
-            if(activites.Count()!=0)
+            if (activities.Count() != 0)
                 Console.WriteLine();
         }
 
@@ -183,13 +182,9 @@ namespace Temporal
             if (Directory.Exists(folder))
             {
                 if (File.Exists(activities_path))
-                    activites = FileHandler.Load<Activities>(activities_path);
+                    activities = FileHandler.Load<Activities>(activities_path);
                 else
-                    activites = new Activities();
-                if (File.Exists(settings_path))
-                    settings = FileHandler.Load<Settings>(settings_path);
-                else
-                    settings = new Settings();
+                    activities = new Activities();
             }
             else
             {
@@ -197,13 +192,10 @@ namespace Temporal
             }
         }
 
-        private void Save_Activites()
+        private void Save_Activities()
         {
-            File.WriteAllText(activities_path,JsonSerializer.Serialize(activites));
+            File.WriteAllText(activities_path, JsonSerializer.Serialize(activities));
         }
-        private void Save_Settings()
-        {
-            File.WriteAllText(settings_path, JsonSerializer.Serialize(settings));
-        }
+
     }
 }
