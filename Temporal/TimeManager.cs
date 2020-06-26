@@ -53,7 +53,7 @@ namespace Temporal
                 Console.Clear();
                 try
                 {
-                    int minHoursAvailable = pc.AskIntQuestion("How many hours are available today?");
+                    float minHoursAvailable = pc.AskFloatQuestion("How many hours are available today?");
                     PrintAPlan(minHoursAvailable);
                     Console.ReadLine();
                 }
@@ -65,13 +65,13 @@ namespace Temporal
             }
         }
 
-        private void PrintAPlan(int hours)
+        private void PrintAPlan(float hours)
         {
             Plan plan = Plan.Generate(activities, hours);
             pc.FormatWriteLine("The plan for {-3} is:", DateTime.Now.ToShortDateString());
             foreach (Todo act in plan)
             {
-                pc.FormatWriteLine("{4} for {0} hrs",act.Name,act.Hours);
+                pc.FormatWriteLine("* {4} for {0} hrs", act.Name,act.Hours);
             }
         }
 
@@ -104,7 +104,7 @@ namespace Temporal
                                 break;
                             case 2:
                                 string name = pc.AskQuestion("What is the name of the new activity?");
-                                int hours = pc.AskIntQuestion(
+                                float hours = pc.AskFloatQuestion(
                                     "How many hours a day would you spend doing this activity?");
                                 int timesAWeek =
                                     pc.AskIntQuestion("How many times a week would you like to do this activity?");
@@ -170,8 +170,8 @@ namespace Temporal
                                 cact.End = DateTime.Parse(newEndDate);
                                 break;
                             case 4:
-                                int duration =
-                                    pc.AskIntQuestion(
+                                float duration =
+                                    pc.AskFloatQuestion(
                                         "Insert the number of hours a week you would like to use do this for.");
                                 cact.Hours = duration;
                                 break;
@@ -195,7 +195,7 @@ namespace Temporal
                 Console.WriteLine();
 
             for (int i = 0; i < activities.Count(); i++)
-                pc.FormatWriteLine("{3}. {2} ({5})", i.ToString(), activities[i].Name, activities[i].Details);
+                pc.FormatWriteLine("{3}. {2} (requiring {-3} hrs {-3} times per week.)", i.ToString(), activities[i].Name, activities[i].Hours,activities[i].TimesPerWeek);
 
             if (activities.Count() != 0)
                 Console.WriteLine();

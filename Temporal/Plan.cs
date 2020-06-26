@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Temporal
 {
@@ -15,14 +16,14 @@ namespace Temporal
             Todos = todos;
         }
 
-        public static Plan Generate(Activities activities, int hours)
+        public static Plan Generate(Activities activities, float hours)
         {
             int[] Weightings = activities.CumulativeWeighting();
             int maxWeight = activities.TotalWeight();
             int failures = 0;
             List<int> todoIDs = new List<int>();
             List<Todo> todos = new List<Todo>();
-            int hoursSpent = 0;
+            float hoursSpent = 0;
             Random rand = new Random();
             while (hoursSpent < hours && failures < trailTimes)
             {
@@ -45,7 +46,7 @@ namespace Temporal
                 }
             }
 
-            return new Plan(todos);
+            return new Plan(todos.OrderBy(x=>Guid.NewGuid()).ToList());
         }
 
         public IEnumerator<Todo> GetEnumerator()

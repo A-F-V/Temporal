@@ -75,5 +75,11 @@ namespace Temporal
             WriteLine(question);
             return ReadAnswer();
         }
+
+        public float AskFloatQuestion(string question)
+        {
+            WriteLine(question);
+            return float.Parse(ReadAnswer());
+        }
     }
 }

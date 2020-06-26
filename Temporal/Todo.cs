@@ -7,7 +7,7 @@ namespace Temporal
         public string Name { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
-        public int Hours { get; set; }
+        public float Hours { get; set; }
         public int TimesPerWeek { get; set; }
 
         public string Details =>
@@ -16,7 +16,7 @@ namespace Temporal
         public Todo()
         {
         }
-        public Todo(string name, int hours=0, int times=0)
+        public Todo(string name, float hours = 0, int times = 0)
         {
             Name = name;
             Hours = hours;
