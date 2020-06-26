@@ -14,9 +14,9 @@ namespace Temporal
             Todos = new List<Todo>();
         }
 
-        public void AddNew()
+        public void AddNew(string name = "Blank", int hours = 0, int times = 0)
         {
-            Todos.Add(Todo.Blank());
+            Todos.Add(new Todo(name,hours,times));
         }
 
         public int Count()

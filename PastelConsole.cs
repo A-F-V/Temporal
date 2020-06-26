@@ -69,5 +69,11 @@ namespace Temporal
             WriteLine(question);
             return int.Parse(ReadAnswer());
         }
+
+        public string AskQuestion(string question)
+        {
+            WriteLine(question);
+            return ReadAnswer();
+        }
     }
 }

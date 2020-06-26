@@ -11,11 +11,20 @@ namespace Temporal
         public int TimesPerWeek { get; set; }
 
         public string Details =>
-            $"{Start.ToShortDateString()} - {End.ToShortDateString()} requiring {Hours} hrs {TimesPerWeek} times per week.";
+            $"requiring {Hours} hrs {TimesPerWeek} times per week.";
 
+        public Todo()
+        {
+        }
+        public Todo(string name, int hours=0, int times=0)
+        {
+            Name = name;
+            Hours = hours;
+            TimesPerWeek = times;
+        }
         public static Todo Blank()
         {
-            return new Todo {Name = "Blank Task"};
+            return new Todo("Blank");
         }
 
         public override string ToString()

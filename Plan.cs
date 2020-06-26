@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Temporal
 {
-    internal class Plan
+    internal class Plan :IEnumerable<Todo>
     {
         private const int trailTimes = 50;
 
@@ -25,7 +26,7 @@ namespace Temporal
             Random rand = new Random();
             while (hoursSpent < hours && failures < trailTimes)
             {
-                int p = rand.Next(0, maxWeight);
+                int p = rand.Next(1, maxWeight+1);
                 int id = 0;
                 int trial = activities[id].TimesPerWeek;
                 while (trial < p)
@@ -37,10 +38,24 @@ namespace Temporal
                 if (todoIDs.Contains(id))
                     failures++;
                 else
+                {
+                    todoIDs.Add(id);
                     todos.Add(activities[id]);
+                    hoursSpent += activities[id].Hours;
+                }
             }
 
             return new Plan(todos);
+        }
+
+        public IEnumerator<Todo> GetEnumerator()
+        {
+            return Todos.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable) Todos).GetEnumerator();
         }
     }
 }

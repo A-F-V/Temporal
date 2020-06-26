@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace Temporal
@@ -36,13 +37,12 @@ namespace Temporal
                             break;
                         case 2:
                             PromptPrintAPlan();
-                            Console.ReadLine();
                             break;
                     }
             } while (response != 4);
         }
 
-        private void PromptPrintAPlan() //TODO
+        private void PromptPrintAPlan()
         {
             if (activities.Count() == 0)
             {
@@ -68,6 +68,11 @@ namespace Temporal
         private void PrintAPlan(int hours)
         {
             Plan plan = Plan.Generate(activities, hours);
+            pc.FormatWriteLine("The plan for {-3} is:", DateTime.Now.ToShortDateString());
+            foreach (Todo act in plan)
+            {
+                pc.FormatWriteLine("{4} for {0} hrs",act.Name,act.Hours);
+            }
         }
 
         private void PromptEditActivities()
@@ -98,9 +103,14 @@ namespace Temporal
 
                                 break;
                             case 2:
-                                activities.AddNew();
+                                string name = pc.AskQuestion("What is the name of the new activity?");
+                                int hours = pc.AskIntQuestion(
+                                    "How many hours a day would you spend doing this activity?");
+                                int timesAWeek =
+                                    pc.AskIntQuestion("How many times a week would you like to do this activity?");
+                                activities.AddNew(name,hours,timesAWeek);
                                 Save_Activities();
-                                pc.WriteLine("New blank activity added.");
+                                pc.FormatWriteLine("{-3} added.", name);
                                 break;
                             case 3:
                                 int d_ID = pc.AskIntQuestion("Which activity would you like to delete?");
@@ -181,6 +191,9 @@ namespace Temporal
 
         private void PrintActivities()
         {
+            if (activities.Count() != 0)
+                Console.WriteLine();
+
             for (int i = 0; i < activities.Count(); i++)
                 pc.FormatWriteLine("{3}. {2} ({5})", i.ToString(), activities[i].Name, activities[i].Details);
 
