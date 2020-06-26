@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Temporal
 {
-    class Activities
+    internal class Activities
     {
         public List<Todo> Todos { get; set; }
+
+        public Todo this[int index] => Todos[index];
 
         public Activities()
         {
             Todos = new List<Todo>();
         }
+
         public void AddNew()
         {
             Todos.Add(Todo.Blank());
@@ -29,9 +29,21 @@ namespace Temporal
             Todos.RemoveAt(dId);
         }
 
-        public Todo this[int index]
+        public int[] CumulativeWeighting()
         {
-            get { return Todos[index]; }
+            int[] output = new int[Todos.Count];
+            for (int i = 0; i < Todos.Count; i++)
+                if (i == 0)
+                    output[i] = Todos[i].TimesPerWeek;
+                else
+                    output[i] = output[i - 1] + Todos[i].TimesPerWeek;
+
+            return output;
+        }
+
+        public int TotalWeight()
+        {
+            return Todos.Sum(x => x.TimesPerWeek);
         }
     }
 }

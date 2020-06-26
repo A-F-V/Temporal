@@ -1,24 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.Drawing.Text;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Temporal
 {
-    class TimeManager
+    internal class TimeManager
     {
+        private readonly string activities_path;
+
         private readonly string folder =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Temporal");
 
-        private readonly string activities_path;
         private Activities activities;
-        private PastelConsole pc = new PastelConsole(ColourPalette.MarineFields);
+        private readonly PastelConsole pc = new PastelConsole(ColourPalette.MarineFields);
 
         public TimeManager()
         {
@@ -32,29 +26,48 @@ namespace Temporal
             do
             {
                 Console.Clear();
-                string ans = pc.AskListQuestion(new string[]
+                string ans = pc.AskListQuestion(new[]
                     {"Edit Activities", "Generate Day Plan", "Exit"});
-                if (Int32.TryParse(ans, out response))
-                {
+                if (int.TryParse(ans, out response))
                     switch (response)
                     {
                         case 1:
                             PromptEditActivities();
-                            break; 
+                            break;
                         case 2:
                             PromptPrintAPlan();
                             Console.ReadLine();
                             break;
                     }
-                }
             } while (response != 4);
         }
 
         private void PromptPrintAPlan() //TODO
         {
-            //TODO GET SETTINGS
+            if (activities.Count() == 0)
+            {
+                pc.WriteLine("No activities to make a plan from.", -3);
+            }
+            else
+            {
+                Console.Clear();
+                try
+                {
+                    int minHoursAvailable = pc.AskIntQuestion("How many hours are available today?");
+                    PrintAPlan(minHoursAvailable);
+                    Console.ReadLine();
+                }
+                catch (Exception e)
+                {
+                    pc.WriteError(e);
+                    Console.ReadLine();
+                }
+            }
+        }
 
-            PrintAPlan(hours);
+        private void PrintAPlan(int hours)
+        {
+            Plan plan = Plan.Generate(activities, hours);
         }
 
         private void PromptEditActivities()
@@ -66,16 +79,17 @@ namespace Temporal
                 try
                 {
                     PrintActivities();
-                    string ans = pc.AskListQuestion(new string[]
+                    string ans = pc.AskListQuestion(new[]
                         {"Edit Activities", "Add Activity", "Delete Activity", "Back"});
-                    if (Int32.TryParse(ans, out response))
-                    {
+                    if (int.TryParse(ans, out response))
                         switch (response)
                         {
                             case 1:
                                 int e_ID = pc.AskIntQuestion("Which activity would you like to edit?");
                                 if (e_ID < 0 || e_ID >= activities.Count())
+                                {
                                     throw new Exception("Cannot delete that item");
+                                }
                                 else
                                 {
                                     ActivitiesEdit(e_ID);
@@ -91,7 +105,9 @@ namespace Temporal
                             case 3:
                                 int d_ID = pc.AskIntQuestion("Which activity would you like to delete?");
                                 if (d_ID < 0 || d_ID >= activities.Count())
+                                {
                                     throw new Exception("Cannot delete that item");
+                                }
                                 else
                                 {
                                     string nameToDelete = activities[d_ID].Name;
@@ -102,7 +118,6 @@ namespace Temporal
 
                                 break;
                         }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -121,13 +136,12 @@ namespace Temporal
                 try
                 {
                     pc.FormatWriteLine("{2} ({5})", cact.Name, cact.Details);
-                    string ans = pc.AskListQuestion(new string[]
+                    string ans = pc.AskListQuestion(new[]
                     {
                         "Edit Name", "Edit Start Date", "Edit End Date", "Edit Hours Required", "Edit Times per Week",
                         "Back"
                     });
-                    if (Int32.TryParse(ans, out response))
-                    {
+                    if (int.TryParse(ans, out response))
                         switch (response)
                         {
                             case 1:
@@ -157,7 +171,6 @@ namespace Temporal
                                 cact.TimesPerWeek = repeats;
                                 break;
                         }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -169,9 +182,7 @@ namespace Temporal
         private void PrintActivities()
         {
             for (int i = 0; i < activities.Count(); i++)
-            {
                 pc.FormatWriteLine("{3}. {2} ({5})", i.ToString(), activities[i].Name, activities[i].Details);
-            }
 
             if (activities.Count() != 0)
                 Console.WriteLine();
@@ -196,6 +207,5 @@ namespace Temporal
         {
             File.WriteAllText(activities_path, JsonSerializer.Serialize(activities));
         }
-
     }
 }
